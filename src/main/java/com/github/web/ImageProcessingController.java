@@ -88,10 +88,17 @@ public class ImageProcessingController {
                 String[] parts = image.split(StrPool.COLON);
                 log.info("images parts ==> {}", Arrays.toString(parts));
                 // 获取镜像名称，如：nginx
-                String repository = parts[0];
-                log.info("images repository ==> {}", repository);
+                String repository;
                 // 获取镜像标签，如：1.18.0
-                String tag = parts[1];
+                String tag;
+                if (parts.length == 2) {
+                    repository = parts[0];
+                    tag = parts[1];
+                }else{
+                    repository = image;
+                    tag = "latest";
+                }
+                log.info("images repository ==> {}", repository);
                 log.info("images tag ==> {}", tag);
 
                 // 格式化镜像名称，将 / 替换为 - ，如：registry.k8s.io-kube-apiserver:v1.27.2 -> registry.k8s.io-kube-apiserver:v1.27.2
@@ -128,7 +135,7 @@ public class ImageProcessingController {
 
                 String provider = stringCloudEntry.getKey();
 
-                if(CharSequenceUtil.isBlank(provider)) {
+                if (CharSequenceUtil.isBlank(provider)) {
                     continue;
                 }
 
