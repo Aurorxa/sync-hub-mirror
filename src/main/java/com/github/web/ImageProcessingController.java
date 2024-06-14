@@ -108,9 +108,9 @@ public class ImageProcessingController {
                 log.info("targetTag ==> {}", targetTag);
 
                 // 拉取不同架构的镜像
-                processPullImage(repository + ":" + tag);
+                processPullImage(repository + StrPool.COLON + tag);
 
-                processTagImage(repository + ":" + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
+                processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
                 // // 推送镜像 -->
                 String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.COLON + targetTag;
                 processPushImage(targetImage, authConfig);
