@@ -26,10 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
@@ -63,7 +60,7 @@ public class ImageProcessingController {
     }
 
     private void processDockerImages(ImageRequest request) throws InterruptedException, IOException {
-        List<String> commands = new ArrayList<>();
+        Map<String,List<String>> providerCommands = new HashMap<>();
 
         for (Map.Entry<String, Cloud> stringCloudEntry : cloud.entrySet()) {
             String provider = stringCloudEntry.getKey();
@@ -82,6 +79,7 @@ public class ImageProcessingController {
                     .withPassword(config.getPassword());
 
             List<String> images = request.getImages();
+            List<String> commands = new ArrayList<>();
 
             for (String image : images) {
                 // 根据冒号拆分
@@ -91,6 +89,7 @@ public class ImageProcessingController {
                 String repository;
                 // 获取镜像标签，如：1.18.0
                 String tag;
+
                 if (parts.length == 2) {
                     repository = parts[0];
                     tag = parts[1];
@@ -109,9 +108,9 @@ public class ImageProcessingController {
                 log.info("targetTag ==> {}", targetTag);
 
                 // 拉取不同架构的镜像
-                processPullImage(image);
+                processPullImage(repository + ":" + tag);
 
-                processTagImage(image, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
+                processTagImage(repository + ":" + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
                 // // 推送镜像 -->
                 String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.COLON + targetTag;
                 processPushImage(targetImage, authConfig);
@@ -121,23 +120,20 @@ public class ImageProcessingController {
 
                 log.info("command ==> {}", command);
             }
+
+            providerCommands.put(provider, commands);
         }
 
         // 生成 output.md 文件
-        generateOutputFile(commands);
+        generateOutputFile(providerCommands);
 
     }
 
-
-    private void generateOutputFile(List<String> commands) throws IOException {
+    private void generateOutputFile(Map<String, List<String>> providerCommands) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputPath), StandardOpenOption.CREATE)) {
-            for (Map.Entry<String, Cloud> stringCloudEntry : cloud.entrySet()) {
-
-                String provider = stringCloudEntry.getKey();
-
-                if (CharSequenceUtil.isBlank(provider)) {
-                    continue;
-                }
+            for (Map.Entry<String, List<String>> entry : providerCommands.entrySet()) {
+                String provider = entry.getKey();
+                List<String> commands = entry.getValue();
 
                 writer.write("# " + provider.toUpperCase());
                 writer.newLine();
