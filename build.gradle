@@ -1,0 +1,68 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'com.github'
+version = '0.0.1'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+//    maven { url 'https://maven.aliyun.com/repository/public/' }
+//    maven { url 'https://maven.aliyun.com/repository/spring/' }
+    mavenLocal()
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.getGeneratedSourceOutputDirectory().set(layout.buildDirectory.dir("generated/sources/annotationProcessor/java/main"))
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'com.github.docker-java:docker-java:3.3.6'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation 'com.github.docker-java:docker-java-transport-httpclient5:3.3.6'
+    /* testcontainers */
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:mysql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'io.rest-assured:rest-assured'
+    testAndDevelopmentOnly 'org.springframework.boot:spring-boot-devtools'
+    /* 异步线程测试 */
+    testImplementation 'org.awaitility:awaitility'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    /* 执行底层命令 */
+    implementation 'org.apache.commons:commons-exec:1.4.0'
+    /* 统一响应 */
+    implementation 'com.feiniaojin:graceful-response:4.0.1-boot3'
+    /* 工具包 */
+    implementation 'cn.hutool:hutool-all:5.8.28'
+
+}
+
+jar {
+    enabled = false
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

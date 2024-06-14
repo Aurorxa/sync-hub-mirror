@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: sync-hub-mirror
+server:
+  servlet:
+    context-path: /
+  port: 8080
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+logging:
+  level:
+    root: INFO
+    com.github: DEBUG
+    
+    
+output:
+  file:
+    path: /path/in/container/output.md

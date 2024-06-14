@@ -1,0 +1,167 @@
+name: Sync Docker Image To Cloud Repository
+
+on:
+  issues:
+    types: [ opened,edited ]
+  workflow_dispatch:
+
+jobs:
+  # 同步镜像文件
+  sync-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      # 拉取源代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      # 设置 JDK
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      # 查看目录结构
+      - name: tree
+        run: |
+          apt -y upgrade && apt -y update && apt -y install tree
+          tree -L 3 .
+          pwd && ls -lah
+      # 构建 Java 镜像
+      - name: Build Docker image
+        run: docker build -t springboot-docker-java-action .
+      # 检查用户组
+      - name: Check user groups
+        run: groups
+      # 启动 Java 容器
+      - name: Run SpringBoot container
+        run: |
+          docker run -d -p 8080:8080 --privileged --name springboot-container \
+          -e "ALIYUN_USERNAME=${{ secrets.ALIYUN_USERNAME }}" \
+          -e "ALIYUN_PASSWORD=${{ secrets.ALIYUN_PASSWORD }}" \
+          -e "ALIYUN_REGISTRY=${{ secrets.ALIYUN_REGISTRY }}" \
+          -e "ALIYUN_NAMESPACE=${{ secrets.ALIYUN_NAMESPACE }}" \
+          -e "TENCENT_USERNAME=${{ secrets.TENCENT_USERNAME }}" \
+          -e "TENCENT_PASSWORD=${{ secrets.TENCENT_PASSWORD }}" \
+          -e "TENCENT_REGISTRY=${{ secrets.TENCENT_REGISTRY }}" \
+          -e "TENCENT_NAMESPACE=${{ secrets.TENCENT_NAMESPACE }}" \
+          -e "HUAWEI_USERNAME=${{ secrets.HUAWEI_USERNAME }}" \
+          -e "HUAWEI_PASSWORD=${{ secrets.HUAWEI_PASSWORD }}" \
+          -e "HUAWEI_REGISTRY=${{ secrets.HUAWEI_REGISTRY }}" \
+          -e "HUAWEI_NAMESPACE=${{ secrets.HUAWEI_NAMESPACE }}" \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v $PWD:/path/in/container \
+          springboot-docker-java-action --server.port=8080
+      # 等待 SpringBoot 启动成功
+      - name: Wait for SpringBoot to start
+        run: |
+          echo "Waiting for SpringBoot to start..."
+          for i in {1..10}; do
+            curl -s http://localhost:8080/actuator/health | grep '"status":"UP"' && break || sleep 5
+            echo "SpringBoot is not up yet, waiting..."
+            docker logs springboot-container
+          done
+          curl -s http://localhost:8080/actuator/health | grep '"status":"UP"' || (echo "SpringBoot failed to start in time" && exit 1)
+          echo "SpringBoot is up and running!"
+      # 检查 SpringBoot 的日志（首次）
+      - name: Stream SpringBoot logs
+        run: |
+          echo "Starting to stream SpringBoot logs..."
+          nohup docker logs -f springboot-container > springboot-container.log &
+      # 提取 issue 内容并设置变量
+      - name: Extract issue content
+        id: extract_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+             // 获取 issue 的内容
+            const issueContentString  = context?.payload?.issue?.body || '{}';
+            console.log(`issueContentString --> ${issueContentString}`);
+            
+            // 写入 JSON 文件
+            fs.writeFileSync('issue_content.json', issueContentString );
+            
+             // 解析 JSON 字符串为对象
+            const issueContent = JSON.parse(issueContentString);
+            
+            const images = issueContent['hub-mirrors'] || [];
+            console.log(`images ==> ${images}`)
+            
+            const jsonPayload = JSON.stringify({
+              images: images
+            });
+            
+            console.log(jsonPayload)
+            
+            fs.writeFileSync('json_payload.json', jsonPayload);
+      # 将数据发送给 SpringBoot
+      - name: Send Data to SpringBoot Service
+        run: |
+          echo "Sending data to SpringBoot Service..."
+          cat json_payload.json
+          # --trace -v
+          curl --trace-ascii /dev/stdout  --max-time 3600  --retry 5 --retry-delay 30 -X POST http://localhost:8080/process -H "Content-Type: application/json" -d @json_payload.json
+          echo "Data sent to SpringBoot Service."
+      # 检查 SpringBoot 的日志
+      - name: Check SpringBoot logs
+        run: |
+          echo "Checking SpringBoot logs..."
+          docker logs springboot-container
+      # 查看完整的日志
+      - name: Check complete SpringBoot logs
+        run: |
+          echo "Displaying complete SpringBoot logs..."
+          tree -L 3 .
+          pwd && ls -lah
+          ls -lah $PWD
+          cat springboot-container.log
+      # 增加评论
+      - name: Add comment
+        if: ${{ hashFiles('output.md') }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const data = fs.readFileSync('output.md', 'utf8')
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: data
+            })
+      # 当以上步骤成功时，为 issues 添加 success 标签
+      - name: Success issues
+        if: ${{ success() }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['success']
+            })
+      # 当以上步骤失败时，为 issues 添加 failure 标签，并为其添加失败原因评论
+      - name: Failure issues
+        if: ${{ failure() }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['failure']
+            })
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "[构建失败，点击查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            })
+
+      
+
+
+
+          
+
