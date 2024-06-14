@@ -41,8 +41,12 @@
 
 * ① 开启 workflow permission 权限：
 
-![image-20240615062212624](./assets/image-20240615062212624.png)
+![image-20240615073108178](./assets/image-20240615073108178.png)
 
 * ② 开启 issue ：
 
-![image-20240615062247536](./assets/image-20240615062247536.png)
+![image-20240615073014646](./assets/image-20240615073014646.png)
+
+* ③ 配置 secret ：
+
+![image-20240615073146328](./assets/image-20240615073146328.png)
