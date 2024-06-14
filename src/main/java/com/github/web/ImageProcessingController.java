@@ -124,10 +124,22 @@ public class ImageProcessingController {
 
     private void generateOutputFile(List<String> commands) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputPath), StandardOpenOption.CREATE)) {
-            for (String command : commands) {
-                writer.write(command);
-                writer.newLine();
+            for (Map.Entry<String, Cloud> stringCloudEntry : cloud.entrySet()) {
+
+                String provider = stringCloudEntry.getKey();
+
+                if(CharSequenceUtil.isBlank(provider)) {
+                    continue;
+                }
+
+                writer.write("# " + provider.toUpperCase());
+
+                for (String command : commands) {
+                    writer.write("* " + command);
+                    writer.newLine();
+                }
             }
+
         }
     }
 
