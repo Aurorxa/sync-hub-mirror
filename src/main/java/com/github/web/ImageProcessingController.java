@@ -133,11 +133,14 @@ public class ImageProcessingController {
                 }
 
                 writer.write("# " + provider.toUpperCase());
+                writer.newLine();
 
                 for (String command : commands) {
                     writer.write("* " + command);
                     writer.newLine();
                 }
+
+                writer.newLine();
             }
 
         }
