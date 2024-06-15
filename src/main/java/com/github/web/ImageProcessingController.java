@@ -102,7 +102,7 @@ public class ImageProcessingController {
                 log.info("images tag ==> {}", tag);
 
                 // 格式化镜像名称，将 / 替换为 - ，如：registry.k8s.io-kube-apiserver:v1.27.2 -> registry.k8s.io-kube-apiserver:v1.27.2
-                String formattedRepository = repository.replace(StrPool.SLASH, StrPool.DASHED);
+                String formattedRepository = repository.replaceAll(StrPool.SLASH, StrPool.DASHED);
                 log.info("formattedRepository ==> {}", formattedRepository);
                 // 获取目标镜像标签，如：registry.k8s.io-kube-apiserver:v1.27.2 --> registry.k8s.io-kube-apiserver_v1.27.2
                 String targetTag;
