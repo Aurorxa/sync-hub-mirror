@@ -119,20 +119,20 @@ public class ImageProcessingController {
                 // 打标签
                 if (!provider
                         .equals(Constant.CUSTOM_PROVIDER)) {
-                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
+                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag.replaceAll("[^\\w.-]", "_"));
                 } else {
-                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository, targetTag);
+                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository, targetTag.replaceAll("[^\\w.-]", "_"));
                 }
                 // 推送镜像
                 if (!provider
                         .equals(Constant.CUSTOM_PROVIDER)) {
-                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.COLON + targetTag;
+                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.COLON + targetTag.replaceAll("[^\\w.-]", "_");
                     processPushImage(targetImage, authConfig);
                     String command = "docker pull " + targetImage + " && docker tag " + targetImage + " " + repository + ":" + tag;
                     commands.add(command);
                     log.info("阿里云等 command ==> {}", command);
                 } else {
-                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository + StrPool.COLON + targetTag;
+                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository + StrPool.COLON + targetTag.replaceAll("[^\\w.-]", "_");
                     processPushImage(targetImage, authConfig);
                     String command = "docker pull " + targetImage + " && docker tag " + targetImage + " " + repository + ":" + tag;
                     commands.add(command);
@@ -249,9 +249,8 @@ public class ImageProcessingController {
         try {
             log.info("镜像打标签开始 ==> {} as {}", image, tag);
             InspectImageCmd inspectImageCmd = dockerClient.inspectImageCmd(image);
-            String formattedTag = tag.replaceAll("[^a-zA-Z0-9_.-]", StrPool.UNDERLINE); // 确保标签格式正确
             dockerClient
-                    .tagImageCmd(inspectImageCmd.getImageId(), targetRegistry, formattedTag)
+                    .tagImageCmd(inspectImageCmd.getImageId(), targetRegistry, tag)
                     .exec();
             log.info("镜像打标签结束 ==> {} as {}", image, tag);
         } catch (Exception e) {
