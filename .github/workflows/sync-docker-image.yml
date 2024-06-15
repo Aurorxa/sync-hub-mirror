@@ -85,7 +85,7 @@ jobs:
       - name: Check if content changed
         id: determine_skip
         run: |
-          if [[ "${{ steps.check_issue.outputs.is_new }}" == "false" && "${{ steps.compare_issue.outputs.content_changed }}" == "false" || "${{ steps.check_issue.outputs.is_new }}" == "" || "${{ steps.compare_issue.outputs.content_changed }}" == "" ]]; then
+          if [[ "${{ steps.check_issue.outputs.is_new }}" == "false" && "${{ steps.compare_issue.outputs.content_changed }}" == "false"  ]]; then
             echo "skip_next_steps=true" >> $GITHUB_ENV
           else
             echo "skip_next_steps=false" >> $GITHUB_ENV
