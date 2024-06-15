@@ -114,7 +114,7 @@ public class ImageProcessingController {
                     targetTag = repository + StrPool.UNDERLINE + tag;
                 }
 
-                targetTag = targetTag.replaceAll("[^\\w.-]", "_");
+                targetTag = targetTag.replaceAll("[^\\w.-]", StrPool.UNDERLINE);
                 log.info("targetTag ==> {}", targetTag);
                 // 拉取镜像
                 processPullImage(repository + StrPool.COLON + tag);
