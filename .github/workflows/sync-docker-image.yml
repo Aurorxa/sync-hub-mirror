@@ -15,8 +15,20 @@ jobs:
       # 拉取源代码
       - name: Checkout repository
         uses: actions/checkout@v4
+      # 判断是否为新建 issue
+      - name: Check if issue is new
+        id: check_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.payload.action === 'opened') {
+              return { is_new: true };
+            } else {
+              return { is_new: false };
+            }
       # 获取 issue 的内容并比较
       - name: Compare issue content
+        if: steps.check_issue.outputs.is_new == 'false'
         id: compare_issue
         uses: actions/github-script@v7
         with:
@@ -71,7 +83,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # 继续执行步骤，如果内容未改变则跳过后续步骤
       - name: Check if content changed
-        if: steps.compare_issue.outputs.content_changed == 'false'
+        if: steps.check_issue.outputs.is_new == 'false' && steps.compare_issue.outputs.content_changed == 'false'
         run: echo "Issue content has not changed. Exiting..." && exit 0
       # 设置 JDK
       - name: Set up JDK 17
