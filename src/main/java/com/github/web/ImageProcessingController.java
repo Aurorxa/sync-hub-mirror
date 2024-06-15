@@ -13,6 +13,7 @@ import com.github.dockerjava.api.model.PushResponseItem;
 import com.github.dto.Cloud;
 import com.github.dto.ImageRequest;
 import com.github.ex.BizException;
+import com.github.utils.Constant;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,7 +61,7 @@ public class ImageProcessingController {
     }
 
     private void processDockerImages(ImageRequest request) throws InterruptedException, IOException {
-        Map<String,List<String>> providerCommands = new HashMap<>();
+        Map<String, List<String>> providerCommands = new HashMap<>();
 
         for (Map.Entry<String, Cloud> stringCloudEntry : cloud.entrySet()) {
             String provider = stringCloudEntry.getKey();
@@ -93,7 +94,7 @@ public class ImageProcessingController {
                 if (parts.length == 2) {
                     repository = parts[0];
                     tag = parts[1];
-                }else{
+                } else {
                     repository = image;
                     tag = "latest";
                 }
@@ -104,20 +105,23 @@ public class ImageProcessingController {
                 String formattedRepository = repository.replace(StrPool.SLASH, StrPool.DASHED);
                 log.info("formattedRepository ==> {}", formattedRepository);
                 // 获取目标镜像标签，如：registry.k8s.io-kube-apiserver:v1.27.2 --> registry.k8s.io-kube-apiserver_v1.27.2
-                String targetTag = formattedRepository + StrPool.UNDERLINE + tag;
+                String targetTag;
+                if (!provider
+                        .equals(Constant.CUSTOM_PROVIDER)) {
+                    targetTag = formattedRepository + StrPool.UNDERLINE + tag;
+                } else {
+                    targetTag = repository + StrPool.COLON + tag;
+                }
                 log.info("targetTag ==> {}", targetTag);
-
-                // 拉取不同架构的镜像
+                // 拉取镜像
                 processPullImage(repository + StrPool.COLON + tag);
-
+                // 打标签
                 processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
-                // // 推送镜像 -->
+                // 推送镜像
                 String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.COLON + targetTag;
                 processPushImage(targetImage, authConfig);
-
                 String command = "docker pull " + targetImage + " && docker tag " + targetImage + " " + repository + ":" + tag;
                 commands.add(command);
-
                 log.info("command ==> {}", command);
             }
 
