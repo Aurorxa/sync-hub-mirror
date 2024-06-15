@@ -56,7 +56,8 @@ jobs:
             // 找到最近一次编辑事件
             const edit_event = issue_events.data.reverse().find(event => event.event === 'edited');
             if (!edit_event) {
-              core.setFailed('No edit event found');
+               console.log('No edit event found. Assuming issue content has not changed.');
+               core.setOutput('content_changed', 'false');
               return;
             }
             
