@@ -83,28 +83,38 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # 继续执行步骤，如果内容未改变则跳过后续步骤
       - name: Check if content changed
-        if: steps.check_issue.outputs.is_new == 'false' && steps.compare_issue.outputs.content_changed == 'false'
-        run: echo "Issue content has not changed. Exiting..." && exit 0
+        id: determine_skip
+        run: |
+          if [[ "${{ steps.check_issue.outputs.is_new }}" == "false" && "${{ steps.compare_issue.outputs.content_changed }}" == "false" ]]; then
+            echo "skip_next_steps=true" >> $GITHUB_ENV
+          else
+            echo "skip_next_steps=false" >> $GITHUB_ENV
+          fi
       # 设置 JDK
       - name: Set up JDK 17
+        if: env.skip_next_steps == 'false'
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
       # 查看目录结构
       - name: tree
+        if: env.skip_next_steps == 'false'
         run: |
           apt -y upgrade && apt -y update && apt -y install tree
           tree -L 3 .
           pwd && ls -lah
       # 构建 Java 镜像
       - name: Build Docker image
+        if: env.skip_next_steps == 'false'
         run: docker build -t springboot-docker-java-action .
       # 检查用户组
       - name: Check user groups
+        if: env.skip_next_steps == 'false'
         run: groups
       # 启动 Java 容器
       - name: Run SpringBoot container
+        if: env.skip_next_steps == 'false'
         run: |
           docker run -d -p 8080:8080 --privileged --name springboot-container \
           -e "ALIYUN_USERNAME=${{ secrets.ALIYUN_USERNAME }}" \
@@ -128,6 +138,7 @@ jobs:
           springboot-docker-java-action --server.port=8080
       # 等待 SpringBoot 启动成功
       - name: Wait for SpringBoot to start
+        if: env.skip_next_steps == 'false'
         run: |
           echo "Waiting for SpringBoot to start..."
           for i in {1..10}; do
@@ -139,12 +150,14 @@ jobs:
           echo "SpringBoot is up and running!"
       # 检查 SpringBoot 的日志（首次）
       - name: Stream SpringBoot logs
+        if: env.skip_next_steps == 'false'
         run: |
           echo "Starting to stream SpringBoot logs..."
           nohup docker logs -f springboot-container > springboot-container.log &
       # 提取 issue 内容并设置变量
       - name: Extract issue content
         id: extract_issue
+        if: env.skip_next_steps == 'false'
         uses: actions/github-script@v7
         with:
           script: |
@@ -171,6 +184,7 @@ jobs:
             fs.writeFileSync('json_payload.json', jsonPayload);
       # 将数据发送给 SpringBoot
       - name: Send Data to SpringBoot Service
+        if: env.skip_next_steps == 'false'
         run: |
           echo "Sending data to SpringBoot Service..."
           cat json_payload.json
@@ -179,11 +193,13 @@ jobs:
           echo "Data sent to SpringBoot Service."
       # 检查 SpringBoot 的日志
       - name: Check SpringBoot logs
+        if: env.skip_next_steps == 'false'
         run: |
           echo "Checking SpringBoot logs..."
           docker logs springboot-container
       # 查看完整的日志
       - name: Check complete SpringBoot logs
+        if: env.skip_next_steps == 'false'
         run: |
           echo "Displaying complete SpringBoot logs..."
           tree -L 3 .
