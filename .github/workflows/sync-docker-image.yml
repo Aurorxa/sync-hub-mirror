@@ -105,7 +105,7 @@ jobs:
           echo "Sending data to SpringBoot Service..."
           cat json_payload.json
           # --trace -v
-          curl --trace-ascii /dev/stdout  --max-time 3600  --retry 5 --retry-delay 30 -X POST http://localhost:8080/process -H "Content-Type: application/json" -d @json_payload.json
+          curl --http1.1 --trace-ascii /dev/stdout  --max-time 3600  --retry 5 --retry-delay 30 -X POST http://localhost:8080/process -H "Content-Type: application/json" -d @json_payload.json
           echo "Data sent to SpringBoot Service."
       # 检查 SpringBoot 的日志
       - name: Check SpringBoot logs
