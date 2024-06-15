@@ -15,6 +15,64 @@ jobs:
       # 拉取源代码
       - name: Checkout repository
         uses: actions/checkout@v4
+      # 获取 issue 的内容并比较
+      - name: Compare issue content
+        id: compare_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const repo_owner = context.repo.owner;
+            const repo_name = context.repo.repo;
+            
+            // 获取当前的 issue 内容
+            const current_issue = await github.rest.issues.get({
+              owner: repo_owner,
+              repo: repo_name,
+              issue_number: issue_number
+            });
+            
+            // 获取 issue 编辑事件的历史记录
+            const issue_events = await github.rest.issues.listEvents({
+              owner: repo_owner,
+              repo: repo_name,
+              issue_number: issue_number
+            });
+            
+            // 找到最近一次编辑事件
+            const edit_event = issue_events.data.reverse().find(event => event.event === 'edited');
+            if (!edit_event) {
+              core.setFailed('No edit event found');
+              return;
+            }
+            
+            // 获取编辑前的 issue 内容
+            const previous_issue = await github.rest.issues.get({
+              owner: repo_owner,
+              repo: repo_name,
+              issue_number: issue_number,
+              headers: { 'If-None-Match': edit_event.node_id }
+            });
+            
+            const current_body = current_issue.data.body || '';
+            const previous_body = previous_issue.data.body || '';
+            
+            console.log(`Current body: ${current_body}`);
+            console.log(`Previous body: ${previous_body}`);
+            
+            if (current_body === previous_body) {
+              console.log('Issue body has not changed.');
+              core.setOutput('content_changed', 'false');
+            } else {
+              console.log('Issue body has changed.');
+              core.setOutput('content_changed', 'true');
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 继续执行步骤，如果内容未改变则跳过后续步骤
+      - name: Check if content changed
+        if: steps.compare_issue.outputs.content_changed == 'false'
+        run: echo "Issue content has not changed. Exiting..." && exit 0
       # 设置 JDK
       - name: Set up JDK 17
         uses: actions/setup-java@v4
