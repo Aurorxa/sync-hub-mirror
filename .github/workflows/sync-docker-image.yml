@@ -22,8 +22,10 @@ jobs:
         with:
           script: |
             if (context.payload.action === 'opened') {
+              core.setOutput('is_new', 'true');
               return { is_new: true };
             } else {
+              core.setOutput('is_new', 'false');
               return { is_new: false };
             }
       # 获取 issue 的内容并比较
