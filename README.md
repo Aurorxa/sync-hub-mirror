@@ -12,21 +12,21 @@
 
 * 阿里云（测试通过）
 
-| Secret 名称        | 用途                 | 是否必须                                    |
-| ------------------ | -------------------- | ------------------------------------------- |
-| `ALIYUN_USERNAME`  | 阿里云镜像仓库用户名 | √                                           |
-| `ALIYUN_PASSWORD`  | 阿里云镜像仓库密码   | √                                           |
-| `ALIYUN_REGISTRY`  | 阿里云镜像仓库地址   | ×，默认是 registry.cn-hangzhou.aliyuncs.com |
-| `ALIYUN_NAMESPACE` | 阿里云镜像命名空间   | √                                           |
+| Secret 名称        | 用途                 | 是否必须                                    | 示例         |
+| ------------------ | -------------------- | ------------------------------------------- | ------------ |
+| `ALIYUN_USERNAME`  | 阿里云镜像仓库用户名 | √                                           | abcefg       |
+| `ALIYUN_PASSWORD`  | 阿里云镜像仓库密码   | √                                           | 123456       |
+| `ALIYUN_REGISTRY`  | 阿里云镜像仓库地址   | ×，默认是 registry.cn-hangzhou.aliyuncs.com |              |
+| `ALIYUN_NAMESPACE` | 阿里云镜像命名空间   | √                                           | aexia/docker |
 
 * 腾讯云（测试通过）
 
-| Secret 名称         | 用途                 | 是否必须                         |
-| ------------------- | -------------------- | -------------------------------- |
-| `TENCENT_USERNAME`  | 腾讯云镜像仓库用户名 | √                                |
-| `TENCENT_PASSWORD`  | 腾讯云镜像仓库密码   | √                                |
-| `TENCENT_REGISTRY`  | 腾讯云镜像仓库地址   | ×，默认是 ccr.ccs.tencentyun.com |
-| `TENCENT_NAMESPACE` | 腾讯云镜像命名空间   | √                                |
+| Secret 名称         | 用途                 | 是否必须                         | 示例         |
+| ------------------- | -------------------- | -------------------------------- | ------------ |
+| `TENCENT_USERNAME`  | 腾讯云镜像仓库用户名 | √                                | abcefg       |
+| `TENCENT_PASSWORD`  | 腾讯云镜像仓库密码   | √                                | 123456       |
+| `TENCENT_REGISTRY`  | 腾讯云镜像仓库地址   | ×，默认是 ccr.ccs.tencentyun.com |              |
+| `TENCENT_NAMESPACE` | 腾讯云镜像命名空间   | √                                | aexia/docker |
 
 * 华为云
 
@@ -39,12 +39,12 @@
 
 * 自定义：
 
-| Secret 名称        | 用途                                         | 是否必须 |
-| ------------------ | -------------------------------------------- | -------- |
-| `CUSTOM_USERNAME`  | 自定义镜像仓库用户名                         | √        |
-| `CUSTOM_PASSWORD`  | 自定义镜像仓库密码                           | √        |
-| `CUSTOM_REGISTRY`  | 自定义镜像仓库地址                           | √        |
-| `CUSTOM_NAMESPACE` | 自定义镜像命名空间（在 Harbor 称为项目名称） | √        |
+| Secret 名称        | 用途                 | 是否必须 | 示例                                                         |
+| ------------------ | -------------------- | -------- | ------------------------------------------------------------ |
+| `CUSTOM_USERNAME`  | 自定义镜像仓库用户名 | √        | abcdef                                                       |
+| `CUSTOM_PASSWORD`  | 自定义镜像仓库密码   | √        | 123456                                                       |
+| `CUSTOM_REGISTRY`  | 自定义镜像仓库地址   | √        | quay.io                                                      |
+| `CUSTOM_NAMESPACE` | 自定义镜像命名空间   | √        | library（在 Harbor 是项目名称，在 quay.io 中是用户名，也可以是其他的） |
 
 ## 仓库权限设置
 
