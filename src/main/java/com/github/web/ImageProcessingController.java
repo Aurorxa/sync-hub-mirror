@@ -110,7 +110,7 @@ public class ImageProcessingController {
                         .equals(Constant.CUSTOM_PROVIDER)) {
                     targetTag = formattedRepository + StrPool.UNDERLINE + tag;
                 } else {
-                    targetTag = repository + StrPool.COLON + tag;
+                    targetTag = repository + StrPool.DASHED + tag;
                 }
                 log.info("targetTag ==> {}", targetTag);
                 // 拉取镜像
