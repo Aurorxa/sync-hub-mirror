@@ -19,7 +19,7 @@ jobs:
       - name: Acquire lock
         uses: softprops/turnstyle@v1
         with:
-          poll-interval-seconds: 10  # 每10秒检查一次是否可以获取锁
+          poll-interval-seconds: 10  # 每 10 秒检查一次是否可以获取锁
       # 判断是否为新建 issue
       - name: Check if issue is new
         id: check_issue
