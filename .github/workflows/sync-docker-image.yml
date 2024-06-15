@@ -15,6 +15,11 @@ jobs:
       # 拉取源代码
       - name: Checkout repository
         uses: actions/checkout@v4
+      # 获取锁
+      - name: Acquire lock
+        uses: softprops/turnstyle@v1
+        with:
+          poll-interval-seconds: 10  # 每10秒检查一次是否可以获取锁
       # 判断是否为新建 issue
       - name: Check if issue is new
         id: check_issue
