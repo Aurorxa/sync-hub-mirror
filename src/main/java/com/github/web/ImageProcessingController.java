@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -178,38 +179,63 @@ public class ImageProcessingController {
         InspectImageCmd inspectImageCmd = dockerClient.inspectImageCmd(targetImage);
         if (inspectImageCmd.exec() == null) {
             log.info("镜像不存在，跳过推送 ==> {}", targetImage);
+            return;
         }
-        try {
-            log.info("推送镜像开始 ==> {}", targetImage);
-            CountDownLatch latch = new CountDownLatch(1);
+        int retryCount = 3;
+        while (retryCount >= 0) {
+            try {
+                log.info("推送镜像开始 ==> {}", targetImage);
+                CountDownLatch latch = new CountDownLatch(1);
 
-            dockerClient
-                    .pushImageCmd(targetImage)
-                    .withAuthConfig(authConfig)
-                    .exec(new ResultCallback.Adapter<PushResponseItem>() {
-                        @Override
-                        public void onNext(PushResponseItem item) {
-                            log.info("PushResponseItem next ==> {}", item);
-                        }
+                dockerClient
+                        .pushImageCmd(targetImage)
+                        .withAuthConfig(authConfig)
+                        .exec(new ResultCallback.Adapter<PushResponseItem>() {
+                            @Override
+                            public void onNext(PushResponseItem item) {
+                                log.info("PushResponseItem next ==> {}", item);
+                            }
 
-                        @Override
-                        public void onError(Throwable throwable) {
-                            log.error("PushResponseItem next error ==> {}", throwable.getMessage());
-                            latch.countDown();  // 出现错误时减少计数，确保退出等待
-                        }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                log.error("PushResponseItem next error ==> {}", throwable.getMessage());
+                                latch.countDown();  // 出现错误时减少计数，确保退出等待
+                            }
 
-                        @Override
-                        public void onComplete() {
-                            log.info("PushResponseItem Image pushed: {}", targetImage);
-                            latch.countDown();  // 拉取完成时减少计数，确保退出等待
-                        }
+                            @Override
+                            public void onComplete() {
+                                log.info("PushResponseItem Image pushed: {}", targetImage);
+                                latch.countDown();  // 拉取完成时减少计数，确保退出等待
+                            }
 
-                    });
-            latch.await();  // 等待推送完成或出现错误
-            log.info("推送镜像结束 ==> {}", targetImage);
-        } catch (Exception ex) {
-            log.error("推送镜像失败 ==> {} ", ex.getMessage());
+                        });
+                // 等待推送完成或出现错误，并设置超时时间为 30 分钟
+                boolean completed  = latch.await(30, TimeUnit.MINUTES);
+                if (completed) {
+                    log.info("推送镜像成功 ==> {}", targetImage);
+                    break;
+                } else {
+                    log.warn("推送镜像超时 ==> {}", targetImage);
+                }
+            } catch (Exception ex) {
+                log.error("推送镜像失败 ==> {} ", ex.getMessage());
+            }
+
+            retryCount--;
+
+            if (retryCount > 0) {
+                log.info("重试推送镜像，剩余重试次数 ==> {}", retryCount);
+                try {
+                    Thread.sleep(5000); // 等待 5 秒钟再重试
+                } catch (InterruptedException e) {
+                    throw new BizException(e.getMessage());
+                }
+            } else {
+                log.error("推送镜像最终失败 ==> {}", targetImage);
+                throw new BizException("推送镜像失败: " + targetImage);
+            }
         }
+
     }
 
     /**
