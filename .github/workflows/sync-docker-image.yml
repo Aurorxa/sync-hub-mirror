@@ -11,12 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     # 设置超时时间为 360 分钟（6 小时）
     timeout-minutes: 360
-    concurrency:
-      group: sync-docker-image
-      cancel-in-progress: false
-    strategy:
-      matrix:
-        job: [ 1, 2, 3, 4, 5, 6 ] # 定义6个并行任务
     steps:
       # 拉取源代码
       - name: Checkout repository
