@@ -119,8 +119,8 @@ public class ImageProcessingController {
                 if (!provider
                         .equals(Constant.CUSTOM_PROVIDER)) {
                     processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
-                }else{
-                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace() +StrPool.SLASH + repository, targetTag);
+                } else {
+                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository, targetTag);
                 }
                 // 推送镜像
                 if (!provider
@@ -130,8 +130,8 @@ public class ImageProcessingController {
                     String command = "docker pull " + targetImage + " && docker tag " + targetImage + " " + repository + ":" + tag;
                     commands.add(command);
                     log.info("阿里云等 command ==> {}", command);
-                }else{
-                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() +StrPool.SLASH + repository + StrPool.COLON + targetTag;
+                } else {
+                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository + StrPool.COLON + targetTag;
                     processPushImage(targetImage, authConfig);
                     String command = "docker pull " + targetImage + " && docker tag " + targetImage + " " + repository + ":" + tag;
                     commands.add(command);
