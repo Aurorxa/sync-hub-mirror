@@ -47,6 +47,10 @@ jobs:
           -e "HUAWEI_PASSWORD=${{ secrets.HUAWEI_PASSWORD }}" \
           -e "HUAWEI_REGISTRY=${{ secrets.HUAWEI_REGISTRY }}" \
           -e "HUAWEI_NAMESPACE=${{ secrets.HUAWEI_NAMESPACE }}" \
+          -e "CUSTOM_USERNAME=${{ secrets.CUSTOM_USERNAME }}" \
+          -e "CUSTOM_PASSWORD=${{ secrets.CUSTOM_PASSWORD }}" \
+          -e "CUSTOM_REGISTRY=${{ secrets.CUSTOM_REGISTRY }}" \
+          -e "CUSTOM_NAMESPACE=${{ secrets.CUSTOM_NAMESPACE }}" \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $PWD:/path/in/container \
           springboot-docker-java-action --server.port=8080

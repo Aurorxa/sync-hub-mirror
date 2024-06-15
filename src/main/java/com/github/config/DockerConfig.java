@@ -101,6 +101,20 @@ public class DockerConfig {
             cloudConfigs.put("TENCENT", new Cloud(huaweiUsername, huaweiPassword, huaweiRegistry, huaweiNamespace));
         }
 
+        // 自定义
+        String customUsername = System.getenv("CUSTOM_USERNAME");
+        log.info("CUSTOM_USERNAME: {}", customUsername);
+        String customPassword = System.getenv("CUSTOM_PASSWORD");
+        log.info("CUSTOM_PASSWORD: {}", customPassword);
+        String customRegistry = System.getenv("CUSTOM_REGISTRY");
+        log.info("CUSTOM_REGISTRY: {}", customRegistry);
+        String customNamespace = System.getenv("CUSTOM_NAMESPACE");
+        log.info("CUSTOM_NAMESPACE: {}", customNamespace);
+
+        if (CharSequenceUtil.isNotBlank(customUsername) && CharSequenceUtil.isNotBlank(customPassword) && CharSequenceUtil.isNotBlank(customRegistry) && CharSequenceUtil.isNotBlank(customNamespace)) {
+            cloudConfigs.put("CUSTOM", new Cloud(customUsername, customPassword, customRegistry, customNamespace));
+        }
+
         return cloudConfigs;
     }
 
