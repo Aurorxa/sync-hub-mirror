@@ -113,26 +113,28 @@ public class ImageProcessingController {
                 } else {
                     targetTag = repository + StrPool.UNDERLINE + tag;
                 }
+
+                targetTag = targetTag.replaceAll("[^\\w.-]", "_");
                 log.info("targetTag ==> {}", targetTag);
                 // 拉取镜像
                 processPullImage(repository + StrPool.COLON + tag);
                 // 打标签
                 if (!provider
                         .equals(Constant.CUSTOM_PROVIDER)) {
-                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag.replaceAll("[^\\w.-]", "_"));
+                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace(), targetTag);
                 } else {
-                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository, targetTag.replaceAll("[^\\w.-]", "_"));
+                    processTagImage(repository + StrPool.COLON + tag, config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository, targetTag);
                 }
                 // 推送镜像
                 if (!provider
                         .equals(Constant.CUSTOM_PROVIDER)) {
-                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.COLON + targetTag.replaceAll("[^\\w.-]", "_");
+                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.COLON + targetTag;
                     processPushImage(targetImage, authConfig);
                     String command = "docker pull " + targetImage + " && docker tag " + targetImage + " " + repository + ":" + tag;
                     commands.add(command);
                     log.info("阿里云等 command ==> {}", command);
                 } else {
-                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository + StrPool.COLON + targetTag.replaceAll("[^\\w.-]", "_");
+                    String targetImage = config.getRegistry() + StrPool.SLASH + config.getNamespace() + StrPool.SLASH + repository + StrPool.COLON + targetTag;
                     processPushImage(targetImage, authConfig);
                     String command = "docker pull " + targetImage + " && docker tag " + targetImage + " " + repository + ":" + tag;
                     commands.add(command);
