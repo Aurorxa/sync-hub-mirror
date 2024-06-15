@@ -249,8 +249,9 @@ public class ImageProcessingController {
         try {
             log.info("镜像打标签开始 ==> {} as {}", image, tag);
             InspectImageCmd inspectImageCmd = dockerClient.inspectImageCmd(image);
+            String formattedTag = tag.replaceAll("[^a-zA-Z0-9_.-]", StrPool.UNDERLINE); // 确保标签格式正确
             dockerClient
-                    .tagImageCmd(inspectImageCmd.getImageId(), targetRegistry, tag)
+                    .tagImageCmd(inspectImageCmd.getImageId(), targetRegistry, formattedTag)
                     .exec();
             log.info("镜像打标签结束 ==> {} as {}", image, tag);
         } catch (Exception e) {
