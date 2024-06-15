@@ -9,6 +9,8 @@ jobs:
   # 同步镜像文件
   sync-docker-image:
     runs-on: ubuntu-latest
+    # 设置超时时间为 360 分钟（6 小时）
+    timeout-minutes: 360
     steps:
       # 拉取源代码
       - name: Checkout repository
