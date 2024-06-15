@@ -5,6 +5,11 @@ on:
     types: [ opened,edited ]
   workflow_dispatch:
 
+concurrency:
+  group: sync-docker-image
+  cancel-in-progress: false
+  max-parallel: 6  # 设置并发限制为最多 6 个
+
 jobs:
   # 同步镜像文件
   sync-docker-image:
