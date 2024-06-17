@@ -1,6 +1,10 @@
 spring:
   application:
     name: sync-hub-mirror
+  servlet:
+    multipart:
+      max-request-size: 1000MB
+      max-file-size: 1000MB
 server:
   servlet:
     context-path: /
@@ -19,8 +23,8 @@ logging:
   level:
     root: INFO
     com.github: DEBUG
-    
-    
+
+
 output:
   file:
     path: /path/in/container/output.md
