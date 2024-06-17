@@ -16,109 +16,26 @@ jobs:
       # 拉取源代码
       - name: Checkout repository
         uses: actions/checkout@v4
-      # 判断是否为新建 issue
-      - name: Check if issue is new
-        id: check_issue
-        uses: actions/github-script@v7
-        with:
-          script: |
-            if (context.payload.action === 'opened') {
-              core.setOutput('is_new', 'true');
-              return { is_new: true };
-            } else {
-              core.setOutput('is_new', 'false');
-              return { is_new: false };
-            }
-      # 获取 issue 的内容并比较
-      - name: Compare issue content
-        if: steps.check_issue.outputs.is_new == 'false'
-        id: compare_issue
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issue_number = context.issue.number;
-            const repo_owner = context.repo.owner;
-            const repo_name = context.repo.repo;
-            
-            // 获取当前的 issue 内容
-            const current_issue = await github.rest.issues.get({
-              owner: repo_owner,
-              repo: repo_name,
-              issue_number: issue_number
-            });
-            
-            // 获取 issue 编辑事件的历史记录
-            const issue_events = await github.rest.issues.listEvents({
-              owner: repo_owner,
-              repo: repo_name,
-              issue_number: issue_number
-            });
-            
-            // 找到最近一次编辑事件
-            const edit_event = issue_events.data.reverse().find(event => event.event === 'edited');
-            if (!edit_event) {
-               console.log('No edit event found. Assuming issue content has not changed.');
-               core.setOutput('content_changed', 'false');
-              return;
-            }
-            
-            // 获取编辑前的 issue 内容
-            const previous_issue = await github.rest.issues.get({
-              owner: repo_owner,
-              repo: repo_name,
-              issue_number: issue_number,
-              headers: { 'If-None-Match': edit_event.node_id }
-            });
-            
-            const current_body = current_issue.data.body || '';
-            const previous_body = previous_issue.data.body || '';
-            
-            console.log(`Current body: ${current_body}`);
-            console.log(`Previous body: ${previous_body}`);
-            
-            if (current_body === previous_body) {
-              console.log('Issue body has not changed.');
-              core.setOutput('content_changed', 'false');
-            } else {
-              console.log('Issue body has changed.');
-              core.setOutput('content_changed', 'true');
-            }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # 继续执行步骤，如果内容未改变则跳过后续步骤
-      - name: Check if content changed
-        id: determine_skip
-        run: |
-          if [[ "${{ steps.check_issue.outputs.is_new }}" == "false" && "${{ steps.compare_issue.outputs.content_changed }}" == "false"  ]]; then
-            echo "skip_next_steps=true" >> $GITHUB_ENV
-          else
-            echo "skip_next_steps=false" >> $GITHUB_ENV
-          fi
       # 设置 JDK
       - name: Set up JDK 17
-        if: ${{ env.skip_next_steps == 'false'}}
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
       # 查看目录结构
       - name: tree
-        if: ${{ env.skip_next_steps == 'false'}}
         run: |
           apt -y upgrade && apt -y update && apt -y install tree
           tree -L 3 .
           pwd && ls -lah
       # 构建 Java 镜像
       - name: Build Docker image
-        if: ${{ env.skip_next_steps == 'false'}}
         run: docker build -t springboot-docker-java-action .
       # 检查用户组
       - name: Check user groups
-        if: ${{ env.skip_next_steps == 'false'}}
         run: groups
       # 启动 Java 容器
       - name: Run SpringBoot container
-        if: ${{ env.skip_next_steps == 'false'}}
         run: |
           docker run -d -p 8080:8080 --privileged --name springboot-container \
           -e "ALIYUN_USERNAME=${{ secrets.ALIYUN_USERNAME }}" \
@@ -142,7 +59,6 @@ jobs:
           springboot-docker-java-action --server.port=8080
       # 等待 SpringBoot 启动成功
       - name: Wait for SpringBoot to start
-        if: ${{ env.skip_next_steps == 'false'}}
         run: |
           echo "Waiting for SpringBoot to start..."
           for i in {1..10}; do
@@ -154,14 +70,12 @@ jobs:
           echo "SpringBoot is up and running!"
       # 检查 SpringBoot 的日志（首次）
       - name: Stream SpringBoot logs
-        if: ${{ env.skip_next_steps == 'false'}}
         run: |
           echo "Starting to stream SpringBoot logs..."
           nohup docker logs -f springboot-container > springboot-container.log &
       # 提取 issue 内容并设置变量
       - name: Extract issue content
         id: extract_issue
-        if: ${{ env.skip_next_steps == 'false'}}
         uses: actions/github-script@v7
         with:
           script: |
@@ -188,7 +102,6 @@ jobs:
             fs.writeFileSync('json_payload.json', jsonPayload);
       # 将数据发送给 SpringBoot
       - name: Send Data to SpringBoot Service
-        if: ${{ env.skip_next_steps == 'false'}}
         run: |
           echo "Sending data to SpringBoot Service..."
           cat json_payload.json
@@ -197,13 +110,11 @@ jobs:
           echo "Data sent to SpringBoot Service."
       # 检查 SpringBoot 的日志
       - name: Check SpringBoot logs
-        if: ${{ env.skip_next_steps == 'false'}}
         run: |
           echo "Checking SpringBoot logs..."
           docker logs springboot-container
       # 查看完整的日志
       - name: Check complete SpringBoot logs
-        if: ${{ env.skip_next_steps == 'false'}}
         run: |
           echo "Displaying complete SpringBoot logs..."
           tree -L 3 .
@@ -212,7 +123,7 @@ jobs:
           cat springboot-container.log
       # 增加评论
       - name: Add comment
-        if: ${{ env.skip_next_steps == 'false' && hashFiles('output.md') }}
+        if: ${{ hashFiles('output.md') }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -226,7 +137,7 @@ jobs:
             })
       # 当以上步骤成功时，为 issues 添加 success 标签
       - name: Success issues
-        if: ${{ env.skip_next_steps == 'false' && success() }}
+        if: ${{  success() }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -238,7 +149,7 @@ jobs:
             })
       # 当以上步骤失败时，为 issues 添加 failure 标签，并为其添加失败原因评论
       - name: Failure issues
-        if: ${{ env.skip_next_steps == 'false' && failure() }}
+        if: ${{ failure() }}
         uses: actions/github-script@v7
         with:
           script: |
