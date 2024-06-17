@@ -7,7 +7,6 @@ import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.InspectImageCmd;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.AuthConfig;
-import com.github.dockerjava.api.model.AuthResponse;
 import com.github.dockerjava.api.model.PullResponseItem;
 import com.github.dockerjava.api.model.PushResponseItem;
 import com.github.dto.Cloud;
@@ -212,7 +211,7 @@ public class ImageProcessingController {
 
                         });
                 // 等待推送完成或出现错误，并设置超时时间为 30 分钟
-                boolean completed  = latch.await(30, TimeUnit.MINUTES);
+                boolean completed = latch.await(30, TimeUnit.MINUTES);
                 if (completed) {
                     log.info("推送镜像成功 ==> {}", targetImage);
                     break;
@@ -251,6 +250,10 @@ public class ImageProcessingController {
         try {
             log.info("镜像打标签开始 ==> {} as {}", image, tag);
             InspectImageCmd inspectImageCmd = dockerClient.inspectImageCmd(image);
+            if (inspectImageCmd.exec() == null) {
+                log.info("镜像不存在，跳过拉取 ==> {}", image);
+                return;
+            }
             dockerClient
                     .tagImageCmd(inspectImageCmd.getImageId(), targetRegistry, tag)
                     .exec();
